@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Finance Calculator</title>
+    <style>
+        body { font-family: Arial, sans-serif; direction: ltr; }
+        .container { max-width: 600px; margin: 20px auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px; }
+        label { display: block; margin-top: 10px; }
+        input[type="number"] { width: 100%; padding: 8px; margin-top: 5px; }
+        button { margin-top: 15px; padding: 10px; width: 100%; background-color: #007bff; color: white; border: none; border-radius: 5px; }
+        .result { margin-top: 20px; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Present and Future Value Calculator</h2>
+
+    <label for="amount">Payment Amount (C):</label>
+    <input type="number" id="amount" placeholder="Enter amount" required>
+
+    <label for="interest_rate">Monthly Interest Rate (r) in %:</label>
+    <input type="number" id="interest_rate" placeholder="Enter monthly interest rate" required>
+
+    <label for="months">Number of Months (n):</label>
+    <input type="number" id="months" placeholder="Enter number of months" required>
+
+    <button onclick="calculate()">Calculate Values</button>
+
+    <div id="result" class="result"></div>
+</div>
+
+<div class="container">
+    <h2>Annuity Calculator</h2>
+
+    <label for="annuity_payment">Annuity Payment (C):</label>
+    <input type="number" id="annuity_payment" placeholder="Enter annuity payment amount" required>
+
+    <label for="annuity_interest_rate">Interest Rate (r) in %:</label>
+    <input type="number" id="annuity_interest_rate" placeholder="Enter annual interest rate" required>
+
+    <label for="annuity_periods">Number of Periods (n):</label>
+    <input type="number" id="annuity_periods" placeholder="Enter number of periods" required>
+
+    <button onclick="calculateAnnuity()">Calculate Annuity Values</button>
+
+    <div id="annuity_result" class="result"></div>
+</div>
+
+<script>
+    function calculate() {
+        // Get values for single payment calculation
+        const amount = parseFloat(document.getElementById('amount').value);
+        const interestRate = parseFloat(document.getElementById('interest_rate').value) / 100;
+        const months = parseInt(document.getElementById('months').value);
+
+        // Calculate Present Value (PV) and Future Value (FV)
+        const presentValue = amount / Math.pow((1 + interestRate), months);
+        const futureValue = amount * Math.pow((1 + interestRate), months);
+
+        // Display results for single payment
+        document.getElementById('result').innerHTML = `
+            <p>Present Value (PV): $${presentValue.toFixed(2)}</p>
+            <p>Future Value (FV): $${futureValue.toFixed(2)}</p>
+        `;
+    }
+
+    function calculateAnnuity() {
+        // Get values for annuity calculation
+        const payment = parseFloat(document.getElementById('annuity_payment').value);
+        const interestRate = parseFloat(document.getElementById('annuity_interest_rate').value) / 100;
+        const periods = parseInt(document.getElementById('annuity_periods').value);
+
+        // Calculate Present Value of an Annuity (PVn) and Future Value of an Annuity (FVn)
+        const presentValueAnnuity = (payment / interestRate) * (1 - (1 / Math.pow(1 + interestRate, periods)));
+        const futureValueAnnuity = (payment / interestRate) * (Math.pow(1 + interestRate, periods) - 1);
+
+        // Display results for annuity
+        document.getElementById('annuity_result').innerHTML = `
+            <p>Present Value of Annuity (PVn): $${presentValueAnnuity.toFixed(2)}</p>
+            <p>Future Value of Annuity (FVn): $${futureValueAnnuity.toFixed(2)}</p>
+        `;
+    }
+</script>
+
+</body>
+</html>

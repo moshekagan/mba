@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enhanced IRR Calculator</title>
+    <style>
+        body { font-family: Arial, sans-serif; direction: ltr; }
+        .container { max-width: 600px; margin: 20px auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
+        th { background-color: #f4f4f4; }
+        input { width: 80%; padding: 8px; margin: 0; }
+        button { margin-top: 10px; padding: 10px; width: 100%; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        .result { margin-top: 20px; font-weight: bold; }
+        .add-row-btn, .duplicate-row-btn { margin-top: 10px; padding: 8px; background-color: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        .remove-row-btn { background-color: #dc3545; color: white; border: none; border-radius: 5px; cursor: pointer; padding: 5px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Enhanced IRR Calculator</h2>
+
+    <table id="cashflowTable">
+        <thead>
+            <tr>
+                <th>Period</th>
+                <th>Cash Flow (C)</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>0</td>
+                <td><input type="number" value="-1000" required></td>
+                <td><button class="remove-row-btn" onclick="removeRow(this)">Remove</button></td>
+            </tr>
+            <tr>
+                <td>1</td>
+                <td><input type="number" value="200" required></td>
+                <td><button class="remove-row-btn" onclick="removeRow(this)">Remove</button></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <button class="add-row-btn" onclick="addRow()">Add Period</button>
+    <label for="duplicateTimes">Duplicate last value:</label>
+    <input type="number" id="duplicateTimes" placeholder="Enter number of times" min="1">
+    <button class="duplicate-row-btn" onclick="duplicateLastValue()">Duplicate</button>
+    <button onclick="calculateIRR()">Calculate IRR</button>
+
+    <div id="result" class="result"></div>
+</div>
+
+<script>
+    function addRow() {
+        const table = document.getElementById('cashflowTable').getElementsByTagName('tbody')[0];
+        const rowCount = table.rows.length;
+        const newRow = table.insertRow();
+        const cell1 = newRow.insertCell(0);
+        const cell2 = newRow.insertCell(1);
+        const cell3 = newRow.insertCell(2);
+
+        cell1.textContent = rowCount; // Period index
+        cell2.innerHTML = `<input type="number" value="0" required>`;
+        cell3.innerHTML = `<button class="remove-row-btn" onclick="removeRow(this)">Remove</button>`;
+    }
+
+    function removeRow(button) {
+        const row = button.parentNode.parentNode;
+        const table = document.getElementById('cashflowTable');
+        table.deleteRow(row.rowIndex);
+        updatePeriodIndices();
+    }
+
+    function updatePeriodIndices() {
+        const rows = document.querySelectorAll('#cashflowTable tbody tr');
+        rows.forEach((row, index) => {
+            row.cells[0].textContent = index;
+        });
+    }
+
+    function duplicateLastValue() {
+        const table = document.getElementById('cashflowTable').getElementsByTagName('tbody')[0];
+        const rowCount = table.rows.length;
+        if (rowCount === 0) {
+            alert('No rows to duplicate.');
+            return;
+        }
+
+        const lastRow = table.rows[rowCount - 1];
+        const lastValue = lastRow.cells[1].querySelector('input').value;
+        const times = parseInt(document.getElementById('duplicateTimes').value, 10);
+
+        if (isNaN(times) || times <= 0) {
+            alert('Please enter a valid number of times.');
+            return;
+        }
+
+        for (let i = 0; i < times; i++) {
+            const newRow = table.insertRow();
+            const cell1 = newRow.insertCell(0);
+            const cell2 = newRow.insertCell(1);
+            const cell3 = newRow.insertCell(2);
+
+            cell1.textContent = rowCount + i; // Update period index
+            cell2.innerHTML = `<input type="number" value="${lastValue}" required>`;
+            cell3.innerHTML = `<button class="remove-row-btn" onclick="removeRow(this)">Remove</button>`;
+        }
+
+        updatePeriodIndices();
+    }
+
+    function calculateIRR() {
+        const rows = document.querySelectorAll('#cashflowTable tbody tr');
+        const cashflows = Array.from(rows).map(row => parseFloat(row.cells[1].querySelector('input').value));
+
+        if (cashflows.some(isNaN)) {
+            document.getElementById('result').innerText = 'Please enter valid cash flows.';
+            return;
+        }
+
+        const irr = computeIRR(cashflows);
+
+        if (irr === null) {
+            document.getElementById('result').innerText = 'IRR calculation failed. Please check your cash flows.';
+        } else {
+            document.getElementById('result').innerText = `Effective Interest Rate (IRR): ${(irr * 100).toFixed(2)}%`;
+        }
+    }
+
+    function computeIRR(cashflows) {
+        const maxIterations = 1000;
+        const tolerance = 1e-7;
+        let rate = 0.1; // Initial guess (10%)
+
+        for (let i = 0; i < maxIterations; i++) {
+            const npv = cashflows.reduce((sum, cf, idx) => sum + cf / Math.pow(1 + rate, idx), 0);
+            const derivative = cashflows.reduce((sum, cf, idx) => sum - idx * cf / Math.pow(1 + rate, idx + 1), 0);
+
+            if (Math.abs(npv) < tolerance) return rate;
+
+            rate -= npv / derivative; // Update using Newton's method
+        }
+
+        return null; // If no convergence
+    }
+</script>
+
+</body>
+</html>
